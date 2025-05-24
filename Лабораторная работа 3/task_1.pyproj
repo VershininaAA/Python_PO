@@ -1,0 +1,15 @@
+def find_first_index(elements, target):
+    for idx, element in enumerate(elements):
+        if element == target:
+            return idx
+    return -1  
+
+products = ['яблоко', 'банан', 'апельсин', 'груша', 'киви', 'банан']
+
+searches = ['банан', 'груша', 'персик']
+for item in searches:
+    position = find_first_index(products, item)
+    if position >= 0:
+        print(f"Товар '{item}' найден на позиции: {position}.")
+    else:
+        print(f"Товар '{item}' отсутствует в списке.")
