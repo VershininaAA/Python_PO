@@ -1,0 +1,165 @@
+class Book:
+    """Класс для представления книги в библиотечной системе.
+    
+    Атрибуты:
+        id_ (int): Уникальный идентификатор книги
+        name (str): Название книги
+        pages (int): Количество страниц в книге
+    """
+    
+    def __init__(self, id_: int, name: str, pages: int):
+        """Инициализирует экземпляр класса Book.
+        
+        Args:
+            id_: Уникальный идентификатор книги (положительное целое число)
+            name: Название книги (строка)
+            pages: Количество страниц (положительное целое число)
+            
+        Raises:
+            ValueError: Если id_ или pages не являются положительными целыми числами
+            TypeError: Если name не является строкой
+        """
+        if not isinstance(id_, int) or id_ <= 0:
+            raise ValueError("Идентификатор книги должен быть положительным целым числом")
+        if not isinstance(name, str):
+            raise TypeError("Название книги должно быть строкой")
+        if not isinstance(pages, int) or pages <= 0:
+            raise ValueError("Количество страниц должно быть положительным целым числом")
+
+        self.id_ = id_
+        self.name = name
+        self.pages = pages
+
+    def __str__(self) -> str:
+        """Возвращает удобочитаемое строковое представление книги."""
+        return f'Книга "{self.name}" (ID: {self.id_}, {self.pages} стр.)'
+
+    def __repr__(self) -> str:
+        """Возвращает однозначное строковое представление книги для разработчиков."""
+        return f"Book(id_={self.id_}, name='{self.name}', pages={self.pages})"
+
+
+class Library:
+    """Класс для представления библиотеки с коллекцией книг.
+    
+    Атрибуты:
+        books (list[Book]): Список книг в библиотеке
+    """
+    
+    def __init__(self, books: list[Book] = None):
+        """Инициализирует библиотеку.
+        
+        Args:
+            books: Список книг (по умолчанию пустой список)
+        """
+        self.books = books.copy() if books else []
+
+    def get_next_book_id(self) -> int:
+        """Возвращает ID для следующей добавляемой книги.
+        
+        Returns:
+            int: 1 если библиотека пуста, иначе ID последней книги + 1
+        """
+        return 1 if not self.books else self.books[-1].id_ + 1
+
+    def get_index_by_book_id(self, book_id: int) -> int:
+        """Возвращает индекс книги в списке по её ID.
+        
+        Args:
+            book_id: ID искомой книги
+            
+        Returns:
+            int: Индекс книги в списке
+            
+        Raises:
+            ValueError: Если книги с указанным ID не существует
+        """
+        for index, book in enumerate(self.books):
+            if book.id_ == book_id:
+                return index
+        raise ValueError(f"Книги с ID {book_id} не существует")
+
+    def add_book(self, name: str, pages: int) -> Book:
+        """Добавляет новую книгу в библиотеку.
+        
+        Args:
+            name: Название новой книги
+            pages: Количество страниц
+            
+        Returns:
+            Book: Созданный объект книги
+        """
+        new_book = Book(id_=self.get_next_book_id(), name=name, pages=pages)
+        self.books.append(new_book)
+        return new_book
+
+    def remove_book(self, book_id: int) -> None:
+        """Удаляет книгу из библиотеки по её ID.
+        
+        Args:
+            book_id: ID удаляемой книги
+            
+        Raises:
+            ValueError: Если книги с указанным ID не существует
+        """
+        index = self.get_index_by_book_id(book_id)
+        self.books.pop(index)
+
+    def __str__(self) -> str:
+        """Возвращает строковое представление библиотеки."""
+        return f"Библиотека (книг: {len(self.books)})"
+
+
+if __name__ == '__main__':
+    # Тестовые данные
+    BOOKS_DATABASE = [
+        {"id": 1, "name": "Гарри Поттер и Философский камень", "pages": 400},
+        {"id": 2, "name": "Властелин Колец: Братство Кольца", "pages": 600}
+    ]
+    
+    # Создаем список книг
+    books = [Book(**data) for data in BOOKS_DATABASE]
+    
+    # Тестируем библиотеку
+    print("Тестирование библиотеки:")
+    
+    # 1. Создаем пустую библиотеку
+    empty_lib = Library()
+    print(f"\n1. Пустая библиотека: {empty_lib}")
+    print(f"Следующий ID для пустой библиотеки: {empty_lib.get_next_book_id()}")
+    
+    # 2. Создаем библиотеку с книгами
+    lib = Library(books)
+    print(f"\n2. Библиотека с книгами: {lib}")
+    print(f"Следующий ID: {lib.get_next_book_id()}")
+    
+    # 3. Поиск книг по ID
+    print("\n3. Поиск книг по ID:")
+    for book_id in [1, 2, 3]:
+        try:
+            idx = lib.get_index_by_book_id(book_id)
+            print(f"Книга с ID {book_id} имеет индекс {idx}")
+        except ValueError as e:
+            print(f"Ошибка: {e}")
+    
+    # 4. Добавление новой книги
+    print("\n4. Добавление книги:")
+    new_book = lib.add_book("1984", 328)
+    print(f"Добавлена книга: {new_book}")
+    print(f"Следующий ID после добавления: {lib.get_next_book_id()}")
+    
+    # 5. Удаление книги
+    print("\n5. Удаление книги:")
+    try:
+        lib.remove_book(1)
+        print("Книга с ID 1 удалена")
+        print(f"Теперь следуюший ID: {lib.get_next_book_id()}")
+    except ValueError as e:
+        print(f"Ошибка при удалении: {e}")
+    
+    # 6. Попытка удалить несуществующую книгу
+    print("\n6. Попытка удалить несуществующую книгу:")
+    try:
+        lib.remove_book(99)
+    except ValueError as e:
+        print(f"Ошибка: {e}")
