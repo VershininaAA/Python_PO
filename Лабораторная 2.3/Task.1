@@ -1,0 +1,189 @@
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from typing import Union
+
+class Book(ABC):
+    """Абстрактный базовый класс для всех типов книг."""
+    
+    def __init__(self, title: str, author: str):
+        """
+        Инициализация книги.
+        
+        Args:
+            title: Название книги
+            author: Автор книги
+        """
+        self._title = title
+        self._author = author
+
+    @property
+    def title(self) -> str:
+        """Возвращает название книги."""
+        return self._title
+
+    @property
+    def author(self) -> str:
+        """Возвращает автора книги."""
+        return self._author
+
+    @abstractmethod
+    def get_details(self) -> str:
+        """Возвращает детализированное описание книги."""
+        pass
+
+    def __str__(self) -> str:
+        return f"{self.title} - {self.author}"
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(title={self.title!r}, author={self.author!r})"
+
+@dataclass
+class BookMetadata:
+    """Класс для хранения метаданных книги."""
+    isbn: str = ""
+    publisher: str = ""
+    year: int = 0
+
+class PaperBook(Book):
+    """Класс для бумажных книг."""
+    
+    def __init__(self, title: str, author: str, page_count: int):
+        """
+        Инициализация бумажной книги.
+        
+        Args:
+            title: Название книги
+            author: Автор книги
+            page_count: Количество страниц
+        """
+        super().__init__(title, author)
+        self.page_count = page_count
+        self.metadata = BookMetadata()
+
+    @property
+    def page_count(self) -> int:
+        """Возвращает количество страниц."""
+        return self._page_count
+
+    @page_count.setter
+    def page_count(self, value: int):
+        """Устанавливает количество страниц с проверкой."""
+        if not isinstance(value, int):
+            raise TypeError("Количество страниц должно быть целым числом")
+        if value <= 0:
+            raise ValueError("Количество страниц должно быть положительным")
+        self._page_count = value
+
+    def get_details(self) -> str:
+        """Возвращает детализированное описание бумажной книги."""
+        details = f"Бумажная книга: {self.title}\nАвтор: {self.author}\nСтраниц: {self.page_count}"
+        if self.metadata.isbn:
+            details += f"\nISBN: {self.metadata.isbn}"
+        return details
+
+    def __repr__(self) -> str:
+        return (f"{self.__class__.__name__}(title={self.title!r}, "
+                f"author={self.author!r}, page_count={self.page_count})")
+
+class AudioBook(Book):
+    """Класс для аудиокниг."""
+    
+    def __init__(self, title: str, author: str, duration: float, narrator: str = ""):
+        """
+        Инициализация аудиокниги.
+        
+        Args:
+            title: Название книги
+            author: Автор книги
+            duration: Продолжительность в часах
+            narrator: Исполнитель аудиокниги
+        """
+        super().__init__(title, author)
+        self.duration = duration
+        self.narrator = narrator
+        self.metadata = BookMetadata()
+
+    @property
+    def duration(self) -> float:
+        """Возвращает продолжительность аудиокниги."""
+        return self._duration
+
+    @duration.setter
+    def duration(self, value: float):
+        """Устанавливает продолжительность с проверкой."""
+        if not isinstance(value, (int, float)):
+            raise TypeError("Продолжительность должна быть числом")
+        if value <= 0:
+            raise ValueError("Продолжительность должна быть положительной")
+        self._duration = float(value)
+
+    def get_details(self) -> str:
+        """Возвращает детализированное описание аудиокниги."""
+        details = (f"Аудиокнига: {self.title}\nАвтор: {self.author}\n"
+                  f"Продолжительность: {self.duration:.1f} ч.")
+        if self.narrator:
+            details += f"\nИсполнитель: {self.narrator}"
+        return details
+
+    def __repr__(self) -> str:
+        return (f"{self.__class__.__name__}(title={self.title!r}, "
+               f"author={self.author!r}, duration={self.duration}, "
+               f"narrator={self.narrator!r})")
+
+class Library:
+    """Класс для управления коллекцией книг."""
+    
+    def __init__(self):
+        """Инициализация библиотеки."""
+        self._books = []
+
+    def add_book(self, book: Book) -> None:
+        """Добавляет книгу в коллекцию."""
+        if not isinstance(book, Book):
+            raise TypeError("Можно добавлять только объекты Book")
+        self._books.append(book)
+
+    def find_books(self, search_term: str) -> list[Book]:
+        """Находит книги по названию или автору."""
+        return [book for book in self._books 
+               if search_term.lower() in book.title.lower() 
+               or search_term.lower() in book.author.lower()]
+
+    def __str__(self) -> str:
+        return f"Библиотека: {len(self._books)} книг"
+
+if __name__ == "__main__":
+    # Создаем книги
+    paper_book = PaperBook("1984", "George Orwell", 328)
+    paper_book.metadata = BookMetadata(isbn="978-0451524935", year=1949)
+    
+    audio_book = AudioBook("1984", "George Orwell", 11.5, "Simon Prebble")
+    audio_book.metadata = BookMetadata(isbn="978-1455847990", year=2013)
+
+    # Создаем библиотеку и добавляем книги
+    library = Library()
+    library.add_book(paper_book)
+    library.add_book(audio_book)
+
+    # Демонстрация работы
+    print("\nДетали книг:")
+    for book in [paper_book, audio_book]:
+        print("\n" + book.get_details())
+
+    print("\nПоиск в библиотеке:")
+    for term in ["Orwell", "1984"]:
+        found = library.find_books(term)
+        print(f"\nНайдено {len(found)} книг по запросу '{term}':")
+        for book in found:
+            print(f"- {book.title} ({book.__class__.__name__})")
+
+    print("\nТестирование валидации:")
+    try:
+        invalid_book = PaperBook("Invalid", "Author", -100)
+    except ValueError as e:
+        print(f"Ошибка: {e}")
+
+    try:
+        library.add_book("Not a book")
+    except TypeError as e:
+        print(f"Ошибка: {e}")
